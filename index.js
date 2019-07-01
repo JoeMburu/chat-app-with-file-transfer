@@ -3,7 +3,7 @@ const app = express();
 const http = require('http');
 const path = require('path');
 const cors = require('cors');
-const cv = require('opencv4nodejs');
+//const cv = require('opencv4nodejs');
 const { generateMessage, generateLocationMessage } = require('./src/utils/messages');
 const { addUser, removeUser, getUser, getUsersInRoom } = require('./src/utils/users');
 
@@ -23,7 +23,7 @@ app.get('/', (req, res, next) => {
 });
 
 
-const port = process.env.port || 3000;
+const port = process.env.PORT || 3000;
 const io = require('socket.io')(server);
 
 server.listen(port, () => {
