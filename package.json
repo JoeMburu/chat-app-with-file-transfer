@@ -4,8 +4,7 @@
   "description": "ddm djjkjd",
   "main": "index.js",
   "engines": {
-    "node": "10.14.1",
-    "npm": "6.9.1"
+    "node": "10.14.1"    
   },
   "scripts": {
     "start": "node index.js"

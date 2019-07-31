@@ -1,111 +1,205 @@
-const socket = io();
+const socket = io.connect('/');
 
-const sendButton = document.getElementById('messageSubmitBtn');
-const chatArea = document.getElementById('message-box');
-const geoLocationBtn = document.getElementById('geoLocationBtn');
-const $messages = document.querySelector('#messages');
+const displayUsers = document.querySelector('#display');
+const remoteUserId = document.querySelector('#remoteUserId');
+const callBtn = document.querySelector('#callBtn');
+const hangUpBtn = document.querySelector('#hangUpBtn');
+const videoLocal = document.querySelector('.local');
+const videoRemote = document.querySelector('.remote');
+const myID = document.querySelector('.myID');
 
-// Template
-const messageTemplate = document.querySelector('#message-template').innerHTML;
-const urlTemplate = document.querySelector('#url-template').innerHTML;
-const chatSidebarTemplate = document.querySelector('#sidebar-template').innerHTML;
+const configuration =
+        {"iceServers": [
+            {"urls": "stun:stun.l.google.com:19302"},
+            {
+                "urls": 'turn:numb.viagenie.ca',
+                "credential": 'muazkh',
+                "username": 'webrtc@live.com'
+            } 
+        ]};
+const constraints = {audio: true, video: true};
+const mediaConstraints = {
+    'mandatory': {
+        'OfferToReceiveAudio': true,
+        'OfferToReceiveVideo': true
+    },
+    'optional': [{'DtlsSrtpKeyAgreement': 'true'}]
+};
 
-// Options
-const {username, room} = Qs.parse(location.search, { ignoreQueryPrefix: true })
+let pc = new RTCPeerConnection(configuration, mediaConstraints); 
+let remoteId;
+let initiatorId;
+let localStream;
+let remoteStream;
 
-const autoscroll = () => {
-    console.log("autoscrollling...");
 
-    // New message element
-    const $newMessage = $messages.lastElementChild;
-    
-    // Height of the new messages 
-    const newMessageStyles = getComputedStyle($newMessage);
-    const newMessageMargin = parseInt(newMessageStyles.marginBottom);
-    const newMessageHeight = $newMessage.offsetHeight + newMessageMargin;
+socket.on('connect', () => {
+    console.log("connected to server");
+    myID.innerHTML = socket.id;
+    startCamera();
+});
 
-    // Visible height
-    const visibleHeight = $messages.offsetHeight;
 
-    // Height of messages container
-    const containerHeight = $messages.scrollHeight;
-
-    // How far have I scrolled?
-    const scrollOffset = $messages.scrollTop + visibleHeight;
-
-    if(containerHeight - newMessageHeight <= scrollOffset) {
-        $messages.scrollTop = $messages.scrollHeight;
+socket.on('update display add', (value) => {
+    displayUsers.innerHTML = '';
+    for(let i = 0; i < value.length; i++) {  
+        let el = document.createElement('div');
+        el.setAttribute('id', value[i]);
+        el.innerHTML = value[i];
+        if(socket.id !== value[i]) {
+            el.addEventListener('click', () => {
+                start(value[i]);
+            });
+        }        
+        displayUsers.appendChild(el);        
     }  
+});
+
+socket.on('update display leave', (id) => {
+    let el = document.getElementById(id);
+    displayUsers.removeChild(el);
+});
+
+hangUpBtn.addEventListener('click', hangUp);
+
+// offer made
+socket.on('offer-made', (data) => {
+    console.log("received offer");
+    pc.setRemoteDescription(data.offer);
+ 
+    pc.createAnswer()
+        .then((answer) => {
+            pc.setLocalDescription(answer)
+                .then(() => {
+                    console.log('MAKE ANSWER');
+                    //console.log("answer: ", answer);
+                    socket.emit('make-answer', {
+                        answer: answer,
+                        to: data.socket
+                    })
+                })
+                .catch((err) => {
+                    console.log("Error: ", err);
+                });
+        })
+        .catch((err) => {
+            console.log("Error: ", err);
+        });
+});
+
+// answer made
+socket.on('answer-made', (data) => {
+    pc.setRemoteDescription(data.answer);
+    console.log("answer made");    
+    
+ });
+
+ // receive local ice candidate
+socket.on('receive-ice-candidate', (data) => {
+    console.log("ice candidate received from the first peer...");
+    pc.addIceCandidate(data.candidate);
+    pc.onicecandidate = (event) => { 
+        console.log("event.candidate, remote: ", event.candidate)
+        if(event.candidate) {                    
+            socket.emit('send-remote-ice-candidate', {
+                candidate: event.candidate,
+                to: data.to
+            });
+        }
+    }
+});
+
+ // send remote ice candidate
+socket.on('receive-remote-ice-candidate', (data) => {
+    console.log("Received remote ice candidates, final: ", data.candidate);
+    pc.addIceCandidate(data.candidate);    
+ });
+
+ pc.ontrack = event => {
+    console.log("on track")
+    const stream = event.streams[0];
+    remoteStream = stream;
+    if(!videoRemote.srcObject || videoRemote.srcObject.id !== stream.id) {
+        videoRemote.srcObject = stream;        
+    }
+}
+
+
+function startCamera() {
+    // get media stream
+    navigator.mediaDevices.getUserMedia(constraints)
+    .then((stream) => {
+        // get local stream, show it in the local video tag 
+        //and add to be sent
+        videoLocal.srcObject = stream;
+        localStream = stream;
+        stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    })
+    .catch((err) => {
+        alert("Sorry, your browser does not support Webrtc.");
+    });  
     
 }
 
-// Location event
-socket.on('locationMessage', (location) => {
-   //console.log(url);
-    const html = Mustache.render(urlTemplate, {
-        username: location.username,
-        url: location.url,
-        createdAt: moment(location.createdAt).format('h:mm a')
-    });
-    $messages.insertAdjacentHTML('beforeend', html);
-    autoscroll();
-});
-
-// New message event
-socket.on('message', (message) => {      
-    const html = Mustache.render(messageTemplate, {
-       username: message.username,
-       message: message.text,
-       createdAt: moment(message.createdAt).format('h:mm a')
-    });
-    $messages.insertAdjacentHTML('beforeend', html);
-    autoscroll();
-});
-
-socket.on('roomData', (roomData) => {
-    const html = Mustache.render(chatSidebarTemplate, {
-        room: roomData.room,
-        users: roomData.users
-    });    
-    document.querySelector('#chat-sidebar').innerHTML = html;
-});
-
-sendButton.addEventListener('click', (event) => {
-    event.preventDefault();
-    let message = chatArea.value;
-    socket.emit('sendMessage', message, (ack) => {
-        console.log(ack);
-    });
-});
-
-geoLocationBtn.addEventListener('click', (event) => {
-    event.preventDefault();
-    if(!navigator.geolocation) {
-        return alert("Your browser does not support Geolocation");
-    }
-
-    navigator.geolocation.getCurrentPosition((position) => {
-        socket.emit('sendLocation', { 
-            long: position.coords.longitude, 
-            lat: position.coords.latitude 
-        }, (ack) => {
-            console.log(ack);
-        });
-        
-    });
-});
-
-// socket.on('image', (image) =>  {
+function start(id) {
+    remoteId = id;
+    initiatorId = socket.id; 
     
-//     const imageTag = document.getElementById('image');
-//     imageTag.src =  `data:image/jpeg;base64, ${image}`;
-// });
-
-
-socket.emit('join', { username, room}, (error) => {
-    if(error) {
-        alert("Error: " + error);
-        location.href = '/index.html';
+    pc.onicecandidate = event => {
+        if(event.candidate) {
+            console.log("sending ice candidate to the other peer...");
+            socket.emit('send-ice-candidate', {
+                to: remoteId,
+                from: initiatorId,
+                candidate: event.candidate
+            });           
+        }
     }
-});
+    
+    if(remoteId) {
+        console.log("remoteId id true")
+        pc.createOffer()
+            .then((offer) => {                
+                pc.setLocalDescription(new RTCSessionDescription(offer))
+                    .then(() => {
+                        //console.log('offer: ', offer);
+                        console.log("make offer");
+                        socket.emit('make-offer', {
+                            offer: offer,
+                            to: remoteId,
+                            from: initiatorId
+                        });        
+                    })
+                    .catch((err) => {
+                        console.log("Error:", err);
+                    });        
+            })
+            .catch((err) => {
+                console.log('err: ', err)
+            });
+    }
+
+    
+
+    // navigator.mediaDevices.getUserMedia(constraints)
+    // .then((stream) => {
+    //     videoLocal.srcObject = stream;
+    //     stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    // })
+    // .catch((err) => {
+    //     alert("Sorry, your browser does not support Webrtc.");
+    // });  
+    
+    
+    
+}
+
+function hangUp() {
+    //localStream.getTracks().forEach(track => track.stop());
+    //remoteStream.getTracks().forEach(track => track.stop());
+}
+
+
+
+
 

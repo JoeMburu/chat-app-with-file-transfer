@@ -1,8 +1,10 @@
 
 body {
     font-family: 'Noto Sans HK', sans-serif;
+    box-sizing: border-box;
 }
 
+/* start */
 .centered-form {
     height: 100vh;
     background: rgb(44, 43, 43);
@@ -143,4 +145,73 @@ body {
     height: 50px;
     color: #fff;
     font-size: 1rem;
+}
+/* end */
+
+#container {
+    background: gray;
+    padding-top: 120px;
+}
+
+.video-displays {
+  width: 60%;
+  height: 500px;
+  margin: 0 auto;  
+  position: relative;
+}
+
+.local {
+  height: 500px;
+  width: 100%;
+  background: #000;
+}
+
+.remote {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    width: 150px;
+    height: 150px;
+    background: grey;
+}
+.buttons {
+    height: 60px;
+    width: 60%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    padding-bottom: 20px;
+    justify-content: space-between;
+}
+
+#remoteUserId {
+  flex:  0 0 50%;
+  margin-right: 20px;
+  height: 30px;
+  font-size: 1.3rem;
+}
+
+#callBtn {
+  flex: 0 0 10%;
+  margin-right: 20px;
+  height: 35px;
+  font-size: 1.5rem;
+}
+
+#hangUpBtn {
+  flex: 20%;
+  height: 35px;
+  font-size: 1.5rem;
+}
+
+#display {
+    background: blue; 
+}
+
+#display div {
+    font-size: 1.2rem;
+    color: #fff;
+    cursor: pointer;
+    margin-bottom: 0.8rem;
 }
