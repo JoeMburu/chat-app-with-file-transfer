@@ -150,7 +150,9 @@ body {
 
 #container {
     background: gray;
-    padding-top: 120px;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    min-height: 100vh;
 }
 
 .video-displays {
@@ -186,23 +188,36 @@ body {
 }
 
 #remoteUserId {
-  flex:  0 0 50%;
-  margin-right: 20px;
+  flex:  0 0 20%;
+  margin-right: 5px;
   height: 30px;
   font-size: 1.3rem;
 }
 
 #callBtn {
-  flex: 0 0 10%;
-  margin-right: 20px;
+  flex: 0 0 auto;
+  margin-right: 5px;
   height: 35px;
   font-size: 1.5rem;
 }
 
 #hangUpBtn {
-  flex: 20%;
+  flex: 0 0 auto;
   height: 35px;
   font-size: 1.5rem;
+}
+
+#messageBox {
+    flex:  0 0 20%;
+    margin-right: 5px;
+    height: 30px;
+    font-size: 1.3rem;
+}
+
+#sendMessageBtn {
+    flex: 0 0 auto;
+    height: 35px;
+    font-size: 1.5rem;
 }
 
 #display {
@@ -215,3 +230,20 @@ body {
     cursor: pointer;
     margin-bottom: 0.8rem;
 }
+
+.messageArea {
+    height: 180px;
+    width: 60%;
+    margin: 0 auto;
+    background: #fff;
+    margin-bottom: 4rem;
+}
+
+.file-transfer {
+    width: 60%;
+    margin: 0 auto;
+}
+
+/* .typing-indicator {
+    height: 30px;
+} */
