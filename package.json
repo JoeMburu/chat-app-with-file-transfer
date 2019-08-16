@@ -4,17 +4,17 @@
   "description": "ddm djjkjd",
   "main": "index.js",
   "engines": {
-    "node": "10.14.1"    
+    "node": "10.14.1"
   },
   "scripts": {
     "start": "node index.js"
-  },  
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "opencv4nodejs": "^4.17.0",
+    "opencv-build": "^0.1.4",
     "peer": "^0.2.10",
     "socket.io": "^2.2.0"
   }

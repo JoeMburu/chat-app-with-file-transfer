@@ -115,5 +115,3 @@ io.on('connection', (socket) => {
     
 });
 
-// socket.emit('message', generateMessage('You are welcome to the chat forum!'));
-    // socket.broadcast.emit('message', generateMessage('A user has joined.'));

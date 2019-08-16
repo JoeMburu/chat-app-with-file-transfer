@@ -368,10 +368,3 @@ callBtn.addEventListener('click', call);
 // })
 
 
-// sending text
-// sendMessageBtn.addEventListener('click', function() {
-//     let message = messageBox.value;
-//     sendChannel.send(message);
-//     messageBox.value = "";
-// });
-// end of sending text
