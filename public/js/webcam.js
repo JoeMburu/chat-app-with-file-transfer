@@ -176,12 +176,7 @@ const handleDataChannelMessageReceived = function (event) {
             receivedFileLink.download = receivedFileName;
             receivedFileLink.appendChild(document.createTextNode(receivedFileName + "(" + fileSize + ") bytes"));
         }
-    }
-    
-    
-       
-    
-    
+    }    
 };
 
 const handleDataChannelClose = function (event) {
